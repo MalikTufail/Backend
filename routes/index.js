@@ -2,6 +2,69 @@ var express = require('express');
 var router = express.Router();
 const userModel = require("./users")
 
+router.get('/create', async function (req, res){
+ const userData =  await userModel.create({
+    username: "awais",
+    nickname : "awaisooo",
+    description: "I love to code in any language, node and react",
+    categories: ['java', 'android', 'selenium', 'automation', 'js', 'Node'],
+  })
+  res.send(userData)
+})
+// searching faiq case insensitive
+// router.get('/find', async (req, res) => {
+//   var regex = new RegExp('Faiq', 'i');
+//   let user = await userModel.find({ username: regex})
+//   res.send(user)
+// })
+
+//searching one item from categories
+// router.get('/find', async (req, res) => {
+//   // var regex = new RegExp('Faiq', 'i');
+//   let user = await userModel.find({categories: {
+//     $all:['js']
+//   }})
+//   res.send(user)
+// })
+
+// search for a field if exists
+
+// router.get('/find', async (req, res) => {
+//   // var regex = new RegExp('Faiq', 'i');
+//   let user = await userModel.find({categories: {$exists:true }})
+//   res.send(user)
+// })
+
+//searching a specific length field
+
+router.get('/find', async (req, res) => {
+  // var regex = new RegExp('Faiq', 'i');
+  let user = await userModel.find({
+    $expr: {
+      $and: [
+        { $gte: [{ $strLenCP: '$nickname' }, 0] },
+        { $lte: [{ $strLenCP: '$nickname' }, 12] }
+    ]
+  }
+})
+  res.send(user)
+})
+
+
+//search in the date range
+
+// router.get('/find', async (req, res) => {
+//   var date1 = new Date('2023-12-17');
+//   date1.setHours(10, 50, 8, 337);
+//   var formattedDate = date1.toISOString().slice(0, -1);
+//   var date2 = new Date('2023-12-18');
+//   date2.setHours(10, 50, 8, 337);
+//   var formattedDate2 = date2.toISOString().slice(0, -1);
+  
+//   let user = await userModel.find({ datecreated: {$gte: formattedDate, $lte: formattedDate2 }})
+//   res.send(user)
+// })
+
 // route and session created
 // router.get('/', function (req, res) {
 //   req.session.ban= true;
@@ -10,23 +73,37 @@ const userModel = require("./users")
 
 // setting up cookie  
 
-router.get('/', function (req, res) {
-  res.cookie("age", 25)
-  res.render('index')
-})
+// router.get('/', function (req, res) {
+//   res.cookie("age", 25)
+//   res.render('index')
+// })
+
+//using of flash-connect
+// router.get('/', function (req, res) {
+//   res.render('index')
+// })
+
+// router.get('/failed', function (req, res) {
+//   req.flash("age", 25)
+//   res.send('flash initiated')
+// })
+// router.get('/checkflash', function (req, res) {
+//   console.log(req.flash("age"))
+//   res.send('check read in other route')
+// })
 
 //reading cookies
 
-router.get("/read-cookie", function (req, res) {
-  console.log(req.cookies.age)
-  res.send('check')
-})
+// router.get("/read-cookie", function (req, res) {
+//   console.log(req.cookies.age)
+//   res.send('check')
+// })
 
 //deleting cookie
-router.get('/delete-cookie', function (req, res) {
-  res.clearCookie(res.cookie.age)
-  res.send('cookie cleared')
-})
+// router.get('/delete-cookie', function (req, res) {
+//   res.clearCookie(res.cookie.age)
+//   res.send('cookie cleared')
+// })
 
 //session read
 // router.get('/banned', function (req, res) {

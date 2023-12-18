@@ -7,11 +7,28 @@
 // });
 
 // module.exports = router;
+// const mongoose = require('mongoose')
+// mongoose.connect('mongodb://127.0.0.1:27017/practice-db');
+// const userschema = mongoose.Schema({
+//   username: String,
+//   name : String,
+//   age: Number,
+// })
+// module.exports = mongoose.model("user", userschema)
+
 const mongoose = require('mongoose')
-mongoose.connect('mongodb://127.0.0.1:27017/practice-db');
+mongoose.connect('mongodb://127.0.0.1:27017/practice-test');
 const userschema = mongoose.Schema({
   username: String,
-  name : String,
-  age: Number,
+  nickname : String,
+  description: String,
+  categories: {
+    type: Array,
+    default: []
+  },
+  datecreated: {
+    type: Date,
+    default: Date.now()
+  }
 })
 module.exports = mongoose.model("user", userschema)
