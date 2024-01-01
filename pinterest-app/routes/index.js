@@ -4,19 +4,33 @@ const userModel = require('./users')
 const postModel = require('./posts')
 const passport = require('passport')
 const localStrategy = require('passport-local')
-passport.authenticate(new localStrategy(userModel.authenticate()))
+passport.use(new localStrategy(userModel.authenticate()))
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
-router.get('/profile', isLoggedIn ,function(req, res, next) {
-  res.send('Profile')
+router.get('/login' ,function(req, res, next) {
+  // console.log(req.flash('error'))
+  res.render('login', {error: req.flash('error')});
 });
+
+router.get('/profile', isLoggedIn, function(req, res, next) {
+  res.render('profile');
+});
+
+// router.get('/feed' ,function(req, res, next) {
+//   res.render('feed')
+// });
+
+router.get('/register',function(req, res, next) {
+  res.render('register')
+});
+
 
 router.post('/register', async function(req, res){
   const {username, email, fullname} = req.body;
-  const userData = new userModel.User({username, email, fullname})
+  const userData = new userModel({username, email, fullname})
   userModel.register(userData, req.body.password).then(function(){
     passport.authenticate("local")(req, res, function(){
       res.redirect('/profile')
@@ -25,14 +39,15 @@ router.post('/register', async function(req, res){
 
   router.post('/login', passport.authenticate('local', {
     successRedirect: '/profile',
-    failureRedirect: '/'
+    failureRedirect: '/login',
+    failureFlash: true
   }),async function(req, res){
     
     })
 router.get('/logout', function(req, res) {
   req.logout(function(err) {
     if (err) { return next(err); }
-    res.redirect('/');
+    res.redirect('/login');
   })
 })
 
@@ -47,7 +62,7 @@ router.get('/logout', function(req, res) {
 
 function isLoggedIn (req, res, next) {
   if(req.isAuthenticated()) return next();
-  res.redirect('/');
+  res.redirect('/login');
 }
 
 // router.get('/allposts', async function(req, res, next) {
