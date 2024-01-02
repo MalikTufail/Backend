@@ -4,6 +4,9 @@ const userModel = require('./users')
 const postModel = require('./posts')
 const passport = require('passport')
 const localStrategy = require('passport-local')
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
+require('dotenv').config();
 passport.use(new localStrategy(userModel.authenticate()))
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -15,13 +18,16 @@ router.get('/login' ,function(req, res, next) {
   res.render('login', {error: req.flash('error')});
 });
 
-router.get('/profile', isLoggedIn, function(req, res, next) {
-  res.render('profile');
+router.get('/profile', isLoggedIn, async function(req, res, next) {
+  const user = await userModel.findOne({
+    username: req.session.passport.user
+  });
+  res.render('profile', {user});
 });
 
-// router.get('/feed' ,function(req, res, next) {
-//   res.render('feed')
-// });
+router.get('/feed' ,function(req, res, next) {
+  res.render('feed')
+});
 
 router.get('/register',function(req, res, next) {
   res.render('register')
@@ -36,21 +42,6 @@ router.post('/register', async function(req, res){
       res.redirect('/profile')
     })
   })
-
-  router.post('/login', passport.authenticate('local', {
-    successRedirect: '/profile',
-    failureRedirect: '/login',
-    failureFlash: true
-  }),async function(req, res){
-    
-    })
-router.get('/logout', function(req, res) {
-  req.logout(function(err) {
-    if (err) { return next(err); }
-    res.redirect('/login');
-  })
-})
-
   // let userData = await userModel.create({
   //     username: req.body.username,
   //     email: req.body.email,
@@ -59,11 +50,73 @@ router.get('/logout', function(req, res) {
     
       // res.send(userData);
 })
+router.get('/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+router.get('/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/' }),
+  function(req, res) {
+    res.redirect('/profile');
+  }
+);
+
+router.get('/auth/facebook',
+  passport.authenticate('facebook', { scope: ['email'] })
+);
+
+router.get('/auth/facebook/callback',
+  passport.authenticate('facebook', { failureRedirect: '/' }),
+  function(req, res) {
+    res.redirect('/profile');
+  }
+);
+
+  router.post('/login', passport.authenticate('local', {
+    successRedirect: '/profile',
+    failureRedirect: '/login',
+    failureFlash: true
+  }),async function(req, res){})
+  
+router.get('/logout', function(req, res) {
+  req.logout(function(err) {
+    if (err) { return next(err); }
+    res.redirect('/login');
+  })
+})
 
 function isLoggedIn (req, res, next) {
   if(req.isAuthenticated()) return next();
   res.redirect('/login');
 }
+
+
+
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: 'http://localhost:3000/auth/google/callback'
+  },
+  function(accessToken, refreshToken, profile, done) {
+    // Check if the user already exists in your database or create a new one
+    // Example: userModel.findOrCreate({ googleId: profile.id }, function (err, user) {
+    //   return done(err, user);
+    // });
+  }
+));
+
+passport.use(new FacebookStrategy({
+    clientID: process.env.FACEBOOK_APP_ID,
+    clientSecret: process.env.FACEBOOK_APP_SECRET,
+    callbackURL: 'http://localhost:3000/auth/facebook/callback'
+  },
+  function(accessToken, refreshToken, profile, done) {
+    // Check if the user already exists in your database or create a new one
+    // Example: userModel.findOrCreate({ facebookId: profile.id }, function (err, user) {
+    //   return done(err, user);
+    // });
+  }
+));
 
 // router.get('/allposts', async function(req, res, next) {
 //   let user = await userModel
