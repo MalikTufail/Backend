@@ -6,6 +6,7 @@ const passport = require('passport')
 const localStrategy = require('passport-local')
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
+const upload = require('./multer')
 require('dotenv').config();
 passport.use(new localStrategy(userModel.authenticate()))
 /* GET home page. */
@@ -21,12 +22,29 @@ router.get('/login' ,function(req, res, next) {
 router.get('/profile', isLoggedIn, async function(req, res, next) {
   const user = await userModel.findOne({
     username: req.session.passport.user
-  });
+  })
+  .populate("posts")
   res.render('profile', {user});
 });
 
 router.get('/feed' ,function(req, res, next) {
   res.render('feed')
+});
+
+router.post('/upload', isLoggedIn, upload.single("file") , async function(req, res, next) {
+  if(!req.file) {
+    return res.status(404).send('no files were given')
+  }
+  const user = await userModel.findOne({username: req.session.passport.user});
+  const post = await postModel.create({
+    image: req.file.filename,
+    imageText: req.body.filecaption,
+    detail: req.body.detail,
+    user: user._id
+  })
+  user.posts.push(post._id)
+  await user.save()
+  res.redirect('/profile')
 });
 
 router.get('/register',function(req, res, next) {
@@ -48,7 +66,15 @@ router.post('/register', async function(req, res){
   //     fullName: req.body.fullname,
   //   });
     
-      // res.send(userData);
+      res.send({
+        success: true,
+        message: 'Account created successfully',
+        data:{
+        email: email,
+        user: username,
+        fullname: fullname,
+      }
+      });
 })
 router.get('/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
@@ -76,7 +102,26 @@ router.get('/auth/facebook/callback',
     successRedirect: '/profile',
     failureRedirect: '/login',
     failureFlash: true
-  }),async function(req, res){})
+  }), async function(req, res){
+    if (req.isAuthenticated()) {
+      const username = req.user.username;
+      return res.send({
+        success: true,
+        message: 'Login successful',
+        data: {
+          user: username,
+        }
+      });
+    } else {
+      return res.send({
+        success: false,
+        message: 'Login failed',
+        data: {
+          error: 'Invalid credentials',
+        }
+      });
+    }
+  })
   
 router.get('/logout', function(req, res) {
   req.logout(function(err) {

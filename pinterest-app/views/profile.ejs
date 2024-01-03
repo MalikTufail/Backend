@@ -15,21 +15,56 @@
         </div>
         <h2 class="name"><%= user.username %></h2>
         <h3 class="username"><%= user.username %></h3>
-        <p class="tagline"> Lorem, ipsum dolor sit amet consectetur adipisicing elit. Expedita, sed tenetur? Debitis, accusamus nisi illum error aliquam cupiditate quos ea sit modi atque alias eaque voluptas delectus nam? Provident, natus.</p>
-        <p class="description">Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam nostrum hic rerum libero, esse reiciendis obcaecati omnis praesentium soluta repudiandae et dolore. Obcaecati quisquam incidunt a consequatur cupiditate debitis itaque.</p>
+        <p class="tagline"> Lorem, ipsum dolor sit amet consectetur adipisicing elit. Expedita,</p>
+        <p class="description">Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam nostrum hic rerum libero.</p>
         <a href="/logout" class="button">Logout</a>
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+          <input type="text" name="filecaption" placeholder="Enter caption here">
+          <input type="textarea" name="detail" placeholder="Enter details here">
+          <input type="file" name="file">
+          <input type="submit">
+        </form>
       </div>
   </div>
   <div class="container">
-    <div class="card" style="width: 18rem;">
-      <img src="https://images.unsplash.com/photo-1696418769815-da48c2ee41d6?q=80&w=1478&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" class="card-img-top" alt="...">
-      <div class="card-body">
-        <h5 class="card-title">All designs</h5>
-        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-        <a href="#" class="btn btn-primary">Go somewhere</a>
-      </div>
+    <div class="cards flex">
+      <% user.posts.forEach(function (post){ %>
+        <div class="card" style="width: 18rem;">
+          <img src="/images/uploads/<%= post.image %>" class="card-img-top" alt="..." height="200px">
+          <div class="card-body">
+            <h5 class="card-title"><%= post.imageText %></h5>
+            <p class="card-text">
+              <% if (post.detail.length <= 100) { %>
+                <%= post.detail %>
+              <% } else { %>
+                <span id="shortDesc_<%= post._id %>"><%= post.detail.slice(0, 100) %></span>
+                <span id="longDesc_<%= post._id %>" style="display: none;"><%= post.detail %></span>
+                <a href="#" onclick="toggleSeeMore('<%= post._id %>')">...See More</a>
+                <a href="#" onclick="toggleSeeMore('<%= post._id %>', true)" style="display: none;">See Less</a>
+              <% } %>
+            </p>
+          </div>
+        </div>
+      <% }) %>
     </div>
   </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
   </body>
 </html>
+<script>
+  function toggleSeeMore(postId) {
+    var shortDesc = document.getElementById("shortDesc_" + postId);
+    var longDesc = document.getElementById("longDesc_" + postId);
+    var seeMoreLink = document.querySelector('[onclick="toggleSeeMore(\'' + postId + '\')"]');
+
+    if (longDesc.style.display === "none" || longDesc.style.display === "") {
+      shortDesc.style.display = "none";
+      longDesc.style.display = "inline";
+      seeMoreLink.innerHTML = "See Less";
+    } else {
+      shortDesc.style.display = "inline";
+      longDesc.style.display = "none";
+      seeMoreLink.innerHTML = "...See More";
+    }
+  }
+</script>
